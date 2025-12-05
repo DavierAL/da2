@@ -1,219 +1,229 @@
--- cerrar todas las conexiones a la base de datos
-use master
-go
-IF EXISTS(SELECT * from sys.databases WHERE name='MascotifyDB')
+-- 1. CONTROL DE BASE DE DATOS
+USE master;
+GO
+
+IF EXISTS(SELECT * FROM sys.databases WHERE name='MascotifyDB')
 BEGIN
-    alter database MascotifyDB set single_user
-    with rollback immediate
+    ALTER DATABASE MascotifyDB SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE MascotifyDB;
 END
-go
-
--- buscamos si existe la base de datos
-IF EXISTS(SELECT * from sys.databases WHERE name='MascotifyDB')
-BEGIN
-    drop DATABASE MascotifyDB
-END
-go
-
--- creacion de la base de datos
-create database MascotifyDB
-go
-
--- seleccionamos la base de datos
-use MascotifyDB
-go
-
--- simples
-create table categoria(
-codcat integer primary key identity(1,1),
-nomcat varchar(50) not null,
-estcat bit not null
-)
-go
-
-create table marca(
-codmar integer primary key identity(1,1),
-nommar varchar(50) not null,
-estmar bit not null
-)
-go
-
-create table distrito(
-coddis integer primary key identity(1,1),
-nomdis varchar(50) not null,
-estdis bit not null
-)
-go
-
-create table rol(
-codrol integer primary key identity(1,1),
-nomrol varchar(40) not null,
-estrol bit not null
-)
-go
-
-create table tipodocumento(
-codtipd integer primary key identity(1,1),
-nomtipd varchar(40) not null,
-esttipd bit not null
-)
-go
-
--- cruzadas
-create table producto(
-codpro integer primary key identity(1,1),
-sku varchar(30) not null unique,
-codbar varchar(50),
-nompro varchar(200) not null,
-despro varchar(500),
-precos money,
-preven money not null,
-imgpro varchar(500),
-canpro int not null default 0,
-estpro bit not null,
-codcat integer not null,
-codmar integer not null,
-foreign key (codcat) references categoria(codcat),
-foreign key (codmar) references marca(codmar)
-)
-go
-
-create table empleado(
-codemp integer primary key identity(1,1),
-nomemp varchar(60) not null,
-apepemp varchar(60) not null,
-apememp varchar(60) not null,
-docemp varchar(20) not null,
-diremp varchar(150),
-telemp varchar(15),
-celemp varchar(15) not null,
-coremp varchar(100) not null,
-usuemp varchar(30) not null unique,
-claemp varchar(255) not null,
-estemp bit not null,
-codrol integer not null,
-coddis integer not null,
-codtipd integer not null,
-foreign key (codrol) references rol(codrol),
-foreign key (coddis) references distrito(coddis),
-foreign key (codtipd) references tipodocumento(codtipd)
-)
-go
-
-create table cliente(
-codcli integer primary key identity(1,1),
-nomcli varchar(60) not null,
-apepcli varchar(60) not null,
-apemcli varchar(60) not null,
-doccli varchar(20),
-dircli varchar(150),
-telcli varchar(15),
-celcli varchar(15),
-corcli varchar(100),
-estcli bit not null,
-coddis integer not null,
-codtipd integer,
-foreign key (coddis) references distrito(coddis),
-foreign key (codtipd) references tipodocumento(codtipd)
-)
-go
-
--- maestro y detalle
-create table ticketpedido(
-nroped integer primary key identity(1,1),
-fecped datetime not null default getdate(),
-codemp integer not null,
-codcli integer not null,
-estped bit not null default 1,
-foreign key (codemp) references empleado(codemp),
-foreign key (codcli) references cliente(codcli)
-)
-go
-
-create table detalleticketpedido(
-nrodet integer primary key identity(1,1),
-canent integer not null,
-preent money not null,
-nroped integer not null,
-codpro integer not null,
-foreign key (nroped) references ticketpedido(nroped),
-foreign key (codpro) references producto(codpro)
-)
-go
-
--- insertando datos
--- simples
-insert into categoria values('Alimento Perros',1)
-insert into categoria values('Alimento Gatos',1)
-insert into categoria values('Snacks y Premios',1)
-insert into categoria values('Juguetes',1)
-insert into categoria values('Higiene',1)
-insert into categoria values('Accesorios',1)
-insert into categoria values('Medicamentos',1)
-go
-
-insert into marca values('Royal Canin',1)
-insert into marca values('Pedigree',1)
-insert into marca values('Pro Plan',1)
-insert into marca values('Whiskas',1)
-insert into marca values('Cat Chow',1)
-insert into marca values('Ricocan',1)
-insert into marca values('Mimaskot',1)
-go
-
-INSERT INTO distrito VALUES
-('Miraflores',1),('San Isidro',1),('Surco',1),('San Borja',1),
-('La Molina',1),('Barranco',1),('Magdalena',1),('San Miguel',1)
 GO
 
-INSERT INTO rol VALUES
-('Administrador',1),('Vendedor',1),('Almacenero',1)
+CREATE DATABASE MascotifyDB;
 GO
 
-INSERT INTO tipodocumento VALUES
-('DNI',1),('RUC',1),('Pasaporte',1),('Carnet Extranjeria',1)
+USE MascotifyDB;
 GO
 
--- cruzadas
-insert into empleado values
-('Carlos','Admin','Mascotify','00000001','Av. Principal 123','44556677','987654321','admin@mascotify.pe','admin','admin123',1,1,1,1),
-('Mar�a','L�pez','Ram�rez','71234567','Jr. Las Flores 456','','987123456','maria@mascotify.pe','maria','maria123',1,2,2,1),
-('Jos�','Garc�a','Torres','72345678','Calle Almac�n 100','','988112233','jose@mascotify.pe','jose','jose123',1,3,3,1)
+-- =============================================
+-- 2. TABLAS MAESTRAS (CATÁLOGOS)
+-- =============================================
+
+CREATE TABLE Categoria (
+    IdCategoria INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(50) NOT NULL,
+    Activo BIT DEFAULT 1
+);
 GO
 
-insert into cliente values
-('Juan','P�rez','G�mez','12345678','Av. Larco 1234','4455667','987654321','juan@gmail.com',1,1,1),
-('Ana','Rojas','Torres','87654321','Jr. Los Pinos 567','','987112233','ana@hotmail.com',1,2,1),
-('Luis','Mendoza','Cruz','44555666','Calle 28 de Julio 321','','988223344','luis@gmail.com',1,4,1)
+CREATE TABLE Marca (
+    IdMarca INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(50) NOT NULL,
+    Activo BIT DEFAULT 1
+);
 GO
 
-insert into producto values
-('ROY001','7751001002001','Royal Canin Maxi Adult 15kg','Alimento premium perros grandes',280.00,349.90,'/img/royal.jpg',25,1,1,1),
-('PED002','7752002003002','Pedigree Adulto 21kg','Alimento balanceado perros',110.00,149.90,'/img/pedigree.jpg',40,1,2,1),
-('WHI003','7753003004003','Whiskas Pescado 10kg','Alimento gatos adultos',95.00,129.90,'/img/whiskas.jpg',30,1,4,2)
-go
+CREATE TABLE Distrito (
+    IdDistrito INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(50) NOT NULL,
+    Activo BIT DEFAULT 1
+);
+GO
 
--- Mostrando informacion de la base de datos
--- simples
-select * from categoria
-select * from marca
-select * from distrito
-select * from tipodocumento
-select * from rol
-select * from empleado
-select * from cliente
-select * from producto
-go
+CREATE TABLE Rol (
+    IdRol INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(40) NOT NULL, -- Admin, Vendedor, Almacenero
+    Activo BIT DEFAULT 1
+);
+GO
 
--- cruzadas
-select p.codpro, p.sku, p.nompro, p.preven, p.canpro, p.estpro,
-       c.nomcat, m.nommar 
-from producto p 
-inner join categoria c on p.codcat=c.codcat 
-inner join marca m on p.codmar=m.codmar
-go
+CREATE TABLE TipoDocumento (
+    IdTipoDocumento INT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(40) NOT NULL, -- DNI, RUC, Carnet Ext.
+    Activo BIT DEFAULT 1
+);
+GO
 
--- maestro detalle (ejemplo de un pedido)
-select * from ticketpedido
-select * from detalleticketpedido
-go
+CREATE TABLE EstadoPedido (
+    IdEstadoPedido NT IDENTITY(1,1) PRIMARY KEY,
+    Nombre NVARCHAR(40) NOT NULL, -- Pendiente, Pagado, Despachado, Cancelado
+    Activo BIT DEFAULT 1
+);
+
+-- =============================================
+-- 3. ENTIDADES PRINCIPALES (PERSONAS)
+-- =============================================
+
+CREATE TABLE Empleado (
+    IdEmpleado INT IDENTITY(1,1) PRIMARY KEY,
+    Nombres NVARCHAR(60) NOT NULL,
+    ApellidoPaterno NVARCHAR(60) NOT NULL,
+    ApellidoMaterno NVARCHAR(60) NOT NULL,
+    IdTipoDocumento INT FOREIGN KEY REFERENCES TipoDocumento(IdTipoDocumento),
+    NumeroDocumento VARCHAR(20) UNIQUE NOT NULL,
+    Direccion NVARCHAR(150),
+    Telefono VARCHAR(15),
+    Celular VARCHAR(15) NOT NULL,
+    Correo NVARCHAR(100) NOT NULL,
+    IdDistrito INT FOREIGN KEY REFERENCES Distrito(IdDistrito),
+    IdRol INT FOREIGN KEY REFERENCES Rol(IdRol),
+    
+    -- Credenciales de Acceso (Login)
+    Usuario VARCHAR(30) UNIQUE NOT NULL,
+    PasswordHash VARCHAR(255) NOT NULL, -- En producción, esto debe estar encriptado
+    Activo BIT DEFAULT 1
+);
+GO
+
+CREATE TABLE Cliente (
+    IdCliente INT IDENTITY(1,1) PRIMARY KEY,
+    Nombres NVARCHAR(60) NOT NULL,
+    ApellidoPaterno NVARCHAR(60) NOT NULL,
+    ApellidoMaterno NVARCHAR(60) NOT NULL,
+    IdTipoDocumento INT FOREIGN KEY REFERENCES TipoDocumento(IdTipoDocumento),
+    NumeroDocumento VARCHAR(20),
+    Direccion NVARCHAR(150),
+    Telefono VARCHAR(15),
+    Celular VARCHAR(15),
+    Correo NVARCHAR(100),
+    IdDistrito INT FOREIGN KEY REFERENCES Distrito(IdDistrito),
+    Activo BIT DEFAULT 1
+);
+GO
+
+-- =============================================
+-- 4. PRODUCTOS E INVENTARIO
+-- =============================================
+
+CREATE TABLE Producto (
+    IdProducto INT IDENTITY(1,1) PRIMARY KEY,
+    SKU VARCHAR(50) UNIQUE NOT NULL,       -- Código interno único
+    CodigoBarras VARCHAR(50),              -- Código escaneable
+    Nombre NVARCHAR(200) NOT NULL,
+    Descripcion NVARCHAR(500),
+    IdMarca INT FOREIGN KEY REFERENCES Marca(IdMarca),
+    IdCategoria INT FOREIGN KEY REFERENCES Categoria(IdCategoria),
+    PrecioCosto DECIMAL(10,2),             -- Cuánto nos costó
+    PrecioVenta DECIMAL(10,2) NOT NULL,    -- A cuánto lo vendemos
+    ImagenUrl VARCHAR(500),
+    Activo BIT DEFAULT 1
+);
+GO
+
+CREATE TABLE Inventario (
+    IdInventario INT IDENTITY(1,1) PRIMARY KEY,
+    IdProducto INT UNIQUE FOREIGN KEY REFERENCES Producto(IdProducto),
+    StockActual INT NOT NULL DEFAULT 0,
+    StockMinimo INT DEFAULT 5,
+    UbicacionPasillo VARCHAR(20) -- Ejemplo: 'A-12'
+);
+GO
+
+-- =============================================
+-- 5. TRANSACCIONAL (PEDIDOS)
+-- =============================================
+
+CREATE TABLE Pedido (
+    IdPedido INT IDENTITY(1,1) PRIMARY KEY,
+    NumeroPedidoWeb VARCHAR(50), -- Para integrar con WooCommerce
+    IdCliente INT FOREIGN KEY REFERENCES Cliente(IdCliente),
+    FechaPedido DATETIME DEFAULT GETDATE(),
+    Estado VARCHAR(20) DEFAULT 'Pendiente', -- Pendiente, Pagado, Despachado, Cancelado
+    CanalVenta VARCHAR(20), -- Web, Tienda, WhatsApp
+    Total DECIMAL(10,2),
+    MetodoPago VARCHAR(50) -- Yape, Tarjeta, Efectivo
+);
+GO
+
+CREATE TABLE DetallePedido (
+    IdDetalle INT IDENTITY(1,1) PRIMARY KEY,
+    IdPedido INT FOREIGN KEY REFERENCES Pedido(IdPedido),
+    IdProducto INT FOREIGN KEY REFERENCES Producto(IdProducto),
+    Cantidad INT NOT NULL,
+    PrecioUnitario DECIMAL(10,2) NOT NULL,
+    Subtotal AS (Cantidad * PrecioUnitario) PERSISTED -- Campo calculado automático
+);
+GO
+
+CREATE TABLE MovimientoInventario (
+    IdMovimiento INT IDENTITY(1,1) PRIMARY KEY,
+    IdProducto INT FOREIGN KEY REFERENCES Producto(IdProducto),
+    TipoMovimiento VARCHAR(20), -- Entrada, Salida, Ajuste
+    Cantidad INT NOT NULL, 
+    StockResultante INT NOT NULL, -- Auditoría: cuánto había después de mover
+    FechaMovimiento DATETIME DEFAULT GETDATE(),
+    Referencia VARCHAR(100), -- Nro Pedido o Factura Compra
+    IdEmpleado INT FOREIGN KEY REFERENCES Empleado(IdEmpleado) -- Quién hizo el movimiento
+);
+GO
+
+-- =============================================
+-- 6. INSERTANDO DATOS (SEED DATA)
+-- =============================================
+
+-- Maestros
+INSERT INTO Categoria (Nombre) VALUES ('Alimento Perros'),('Alimento Gatos'),('Snacks'),('Juguetes'),('Higiene'),('Accesorios'),('Medicamentos');
+INSERT INTO Marca (Nombre) VALUES ('Royal Canin'),('Pedigree'),('Pro Plan'),('Whiskas'),('Cat Chow'),('Ricocan'),('Mimaskot');
+INSERT INTO Distrito (Nombre) VALUES ('Miraflores'),('San Isidro'),('Surco'),('San Borja'),('La Molina'),('Barranco'),('Magdalena'),('San Miguel');
+INSERT INTO Rol (Nombre) VALUES ('Administrador'),('Vendedor'),('Almacenero');
+INSERT INTO TipoDocumento (Nombre) VALUES ('DNI'),('RUC'),('Pasaporte'),('Carnet Extranjeria');
+GO
+
+-- Empleados
+-- Nota: IdTipoDocumento 1 es DNI, IdDistrito 1 es Miraflores, IdRol 1 es Admin
+INSERT INTO Empleado (Nombres, ApellidoPaterno, ApellidoMaterno, IdTipoDocumento, NumeroDocumento, Direccion, Telefono, Celular, Correo, IdDistrito, IdRol, Usuario, PasswordHash) VALUES
+('Carlos', 'Admin', 'Mascotify', 1, '00000001', 'Av. Principal 123', '44556677', '987654321', 'admin@mascotify.pe', 1, 1, 'admin', 'admin123'),
+('María', 'López', 'Ramírez', 1, '71234567', 'Jr. Las Flores 456', NULL, '987123456', 'maria@mascotify.pe', 2, 2, 'maria', 'maria123'),
+('José', 'García', 'Torres', 1, '72345678', 'Calle Almacén 100', NULL, '988112233', 'jose@mascotify.pe', 3, 3, 'jose', 'jose123');
+GO
+
+-- Clientes
+INSERT INTO Cliente (Nombres, ApellidoPaterno, ApellidoMaterno, IdTipoDocumento, NumeroDocumento, Direccion, Telefono, Celular, Correo, IdDistrito) VALUES
+('Juan', 'Pérez', 'Gómez', 1, '12345678', 'Av. Larco 1234', '4455667', '987654321', 'juan@gmail.com', 1),
+('Ana', 'Rojas', 'Torres', 1, '87654321', 'Jr. Los Pinos 567', NULL, '987112233', 'ana@hotmail.com', 2),
+('Luis', 'Mendoza', 'Cruz', 1, '44555666', 'Calle 28 de Julio 321', NULL, '988223344', 'luis@gmail.com', 4);
+GO
+
+-- Productos (Datos fijos)
+INSERT INTO Producto (SKU, CodigoBarras, Nombre, Descripcion, IdMarca, IdCategoria, PrecioCosto, PrecioVenta, ImagenUrl, Activo) VALUES
+('ROY001', '7751001002001', 'Royal Canin Maxi Adult 15kg', 'Alimento premium perros grandes', 1, 1, 280.00, 349.90, '/img/royal.jpg', 1),
+('PED002', '7752002003002', 'Pedigree Adulto 21kg', 'Alimento balanceado perros', 2, 1, 110.00, 149.90, '/img/pedigree.jpg', 1),
+('WHI003', '7753003004003', 'Whiskas Pescado 10kg', 'Alimento gatos adultos', 4, 2, 95.00, 129.90, '/img/whiskas.jpg', 1);
+GO
+
+-- Inventario (Stock Inicial)
+-- Nota: IdProducto 1, 2, 3 se generaron arriba.
+INSERT INTO Inventario (IdProducto, StockActual, StockMinimo, UbicacionPasillo) VALUES
+(1, 25, 5, 'A-01'), -- Royal Canin
+(2, 40, 10, 'B-05'), -- Pedigree
+(3, 30, 5, 'C-02'); -- Whiskas
+GO
+
+-- =============================================
+-- 7. CONSULTAS DE PRUEBA
+-- =============================================
+
+-- Consulta de Productos con su Stock y Marcas (Join Completo)
+SELECT 
+    p.SKU, 
+    p.Nombre AS Producto, 
+    m.Nombre AS Marca, 
+    c.Nombre AS Categoria, 
+    p.PrecioVenta, 
+    i.StockActual, 
+    i.UbicacionPasillo
+FROM Producto p
+INNER JOIN Marca m ON p.IdMarca = m.IdMarca
+INNER JOIN Categoria c ON p.IdCategoria = c.IdCategoria
+LEFT JOIN Inventario i ON p.IdProducto = i.IdProducto;
+GO
