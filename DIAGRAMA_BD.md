@@ -1,56 +1,95 @@
 # Diagrama Entidad-Relación - MascotifyDB
 
-```mermaid
-erDiagram
-    Usuario {
-        INT IdUsuario PK
-        VARCHAR NombreCompleto
-        VARCHAR Email
-        VARCHAR PasswordHash
-        VARCHAR Rol
-        BIT Estado
+```erDiagram
+    Categoria {
+        INT IdCategoria PK
+        NVARCHAR Nombre
+        BIT Activo
     }
 
     Marca {
         INT IdMarca PK
-        VARCHAR Nombre
+        NVARCHAR Nombre
+        BIT Activo
     }
 
-    Categoria {
-        INT IdCategoria PK
-        VARCHAR Nombre
+    Distrito {
+        INT IdDistrito PK
+        NVARCHAR Nombre
+        BIT Activo
+    }
+
+    Rol {
+        INT IdRol PK
+        NVARCHAR Nombre
+        BIT Activo
+    }
+
+    TipoDocumento {
+        INT IdTipoDocumento PK
+        NVARCHAR Nombre
+        BIT Activo
+    }
+
+    EstadoPedido {
+        INT IdEstadoPedido PK
+        NVARCHAR Nombre
+        BIT Activo
+    }
+
+    Empleado {
+        INT IdEmpleado PK
+        NVARCHAR Nombres
+        NVARCHAR ApellidoPaterno
+        NVARCHAR ApellidoMaterno
+        INT IdTipoDocumento FK
+        VARCHAR NumeroDocumento "Unique"
+        NVARCHAR Direccion
+        VARCHAR Telefono
+        VARCHAR Celular
+        NVARCHAR Correo
+        INT IdDistrito FK
+        INT IdRol FK
+        VARCHAR Usuario "Unique"
+        VARCHAR PasswordHash
+        BIT Activo
+    }
+
+    Cliente {
+        INT IdCliente PK
+        NVARCHAR Nombres
+        NVARCHAR ApellidoPaterno
+        NVARCHAR ApellidoMaterno
+        INT IdTipoDocumento FK
+        VARCHAR NumeroDocumento
+        NVARCHAR Direccion
+        VARCHAR Telefono
+        VARCHAR Celular
+        NVARCHAR Correo
+        INT IdDistrito FK
+        BIT Activo
     }
 
     Producto {
         INT IdProducto PK
-        VARCHAR SKU
+        VARCHAR SKU "Unique"
         VARCHAR CodigoBarras
-        VARCHAR Nombre
-        VARCHAR Descripcion
+        NVARCHAR Nombre
+        NVARCHAR Descripcion
         INT IdMarca FK
         INT IdCategoria FK
         DECIMAL PrecioCosto
         DECIMAL PrecioVenta
         VARCHAR ImagenUrl
-        BIT Estado
+        BIT Activo
     }
 
     Inventario {
         INT IdInventario PK
-        INT IdProducto FK
-        INT Cantidad
+        INT IdProducto FK "Unique"
+        INT StockActual
         INT StockMinimo
         VARCHAR UbicacionPasillo
-    }
-
-    Cliente {
-        INT IdCliente PK
-        VARCHAR NombreCompleto
-        VARCHAR DNI_RUC
-        VARCHAR Telefono
-        VARCHAR Email
-        VARCHAR DireccionEntrega
-        VARCHAR Distrito
     }
 
     Pedido {
@@ -70,7 +109,7 @@ erDiagram
         INT IdProducto FK
         INT Cantidad
         DECIMAL PrecioUnitario
-        DECIMAL Subtotal
+        DECIMAL Subtotal "Calculated"
     }
 
     MovimientoInventario {
@@ -81,15 +120,28 @@ erDiagram
         INT StockResultante
         DATETIME FechaMovimiento
         VARCHAR Referencia
-        INT IdUsuario FK
+        INT IdEmpleado FK
     }
 
-    Marca ||--o{ Producto : "tiene"
+    %% Relaciones
+    TipoDocumento ||--o{ Empleado : "identifica_a"
+    Distrito ||--o{ Empleado : "reside_en"
+    Rol ||--o{ Empleado : "asignado_a"
+    
+    TipoDocumento ||--o{ Cliente : "identifica_a"
+    Distrito ||--o{ Cliente : "reside_en"
+
+    Marca ||--o{ Producto : "fabrica"
     Categoria ||--o{ Producto : "clasifica"
-    Producto ||--|| Inventario : "tiene_stock"
+    
+    Producto ||--|| Inventario : "tiene_stock_unico"
+
     Cliente ||--o{ Pedido : "realiza"
-    Pedido ||--|{ DetallePedido : "contiene"
+    Pedido ||--|{ DetallePedido : "compuesto_por"
     Producto ||--o{ DetallePedido : "listado_en"
-    Producto ||--o{ MovimientoInventario : "registra_historial"
-    Usuario ||--o{ MovimientoInventario : "gestiona"
+
+    Producto ||--o{ MovimientoInventario : "historial_cambios"
+    Empleado ||--o{ MovimientoInventario : "autoriza"
+
+    %% Nota: EstadoPedido está creada pero no vinculada en el script SQL (Pedido usa VARCHAR directo)
 ```
