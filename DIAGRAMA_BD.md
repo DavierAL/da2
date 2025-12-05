@@ -1,6 +1,9 @@
-# Diagrama Entidad-Relación - MascotifyDB
+# Documentación del Esquema de Base de Datos - MascotifyDB
 
-```erDiagram
+Este documento representa la estructura actual de la base de datos, incluyendo tablas maestras, transaccionales y de inventario.
+
+```mermaid
+erDiagram
     Categoria {
         INT IdCategoria PK
         NVARCHAR Nombre
