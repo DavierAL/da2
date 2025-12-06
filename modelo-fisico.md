@@ -1,6 +1,4 @@
-# Modelo Físico de Base de Datos - MascotifyDB (Corregido)
-
-Se han ajustado los tipos de datos para compatibilidad con el renderizador de Mermaid (moviendo precisiones a los comentarios).
+# Modelo Físico de Base de Datos - MascotifyDB
 
 ```mermaid
 erDiagram
